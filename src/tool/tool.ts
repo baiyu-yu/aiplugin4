@@ -234,10 +234,7 @@ export class ToolManager {
             return ['', false];
         }
 
-        // 清理现有监听状态
-        if (ai.tool.listen.timeoutId) {
-            ai.tool.listen.reject?.(new Error('中断当前监听'));
-        }
+        ai.tool.listen.reject?.(new Error('中断当前监听'));
 
         return new Promise((
             resolve: (result: [string, boolean]) => void,
@@ -326,7 +323,7 @@ export class ToolManager {
 
         if (this.cmdArgs == null) {
             logger.warning(`暂时无法调用函数，请先使用任意海豹指令`);
-            await ai.context.addToolMessage(tool_call.id, `暂时无法调用函数，请先提示用户使用任意指令`);
+            await ai.context.addToolMessage(tool_call.id, `暂时无法调用函数，请先提示用户使用任意海豹指令`);
             return "none";
         }
         if (ConfigManager.tool.toolsNotAllow.includes(name)) {
@@ -399,7 +396,7 @@ export class ToolManager {
 
         if (this.cmdArgs == null) {
             logger.warning(`暂时无法调用函数，请先使用任意海豹指令`);
-            await ai.context.addSystemUserMessage('调用函数返回', `暂时无法调用函数，请先提示用户使用任意指令`, []);
+            await ai.context.addSystemUserMessage('调用函数返回', `暂时无法调用函数，请先提示用户使用任意海豹指令`, []);
             return;
         }
         if (ConfigManager.tool.toolsNotAllow.includes(name)) {
