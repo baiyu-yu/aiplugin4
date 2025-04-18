@@ -7,8 +7,8 @@ export class BackendConfig {
         BackendConfig.ext = ConfigManager.getExt('aiplugin4_6:后端');
 
         seal.ext.registerStringConfig(BackendConfig.ext, "流式输出", "http://localhost:3010", '自行搭建或使用他人提供的后端');
-        seal.ext.registerStringConfig(BackendConfig.ext, "图片转base64", "http://110.41.69.149:46678", '可自行搭建');
-        seal.ext.registerStringConfig(BackendConfig.ext, "联网搜索", "http://110.41.69.149:8080", '可自行搭建');
+        seal.ext.registerStringConfig(BackendConfig.ext, "图片转base64", "http://162.14.109.222:46678", '可自行搭建');
+        seal.ext.registerStringConfig(BackendConfig.ext, "联网搜索", "http://162.14.109.222:8080", '可自行搭建');
         seal.ext.registerStringConfig(BackendConfig.ext, "用量图表", "http://42.193.236.17:3009", '可自行搭建');
     }
 
