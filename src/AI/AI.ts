@@ -121,7 +121,7 @@ export class AI {
 
         const { s, reply, images } = result;
 
-        const msgId = await replyToSender(ctx, msg, this, reply);
+        const { msgId } = await replyToSender(ctx, msg, this, reply);
         await this.context.addMessage(ctx, s, images, 'assistant', msgId);
 
         //发送偷来的图片
@@ -187,7 +187,7 @@ export class AI {
                             return;
                         }
 
-                        const msgId = await replyToSender(ctx, msg, this, reply);
+                        const { msgId } = await replyToSender(ctx, msg, this, reply);
                         await this.context.addMessage(ctx, s, images, 'assistant', msgId);
                     }
 
@@ -213,6 +213,7 @@ export class AI {
                             await ToolManager.handlePromptToolCall(ctx, msg, this, match[1]);
 
                             await this.chatStream(ctx, msg);
+                            return;
                         } else {
                             logger.error('无法匹配到function_call');
                             await this.stopCurrentChatStream();
@@ -232,7 +233,7 @@ export class AI {
                 return;
             }
 
-            const msgId = await replyToSender(ctx, msg, this, reply);
+            const { msgId } = await replyToSender(ctx, msg, this, reply);
             await this.context.addMessage(ctx, s, images, 'assistant', msgId);
 
             after = result.nextAfter;

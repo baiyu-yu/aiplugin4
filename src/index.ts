@@ -13,7 +13,7 @@ import { parseText } from "./utils/utils_string";
 function main() {
   let ext = seal.ext.find('aiplugin4');
   if (!ext) {
-    ext = seal.ext.new('aiplugin4', 'baiyu&错误', '4.7.3');
+    ext = seal.ext.new('aiplugin4', 'baiyu&错误', '4.8.0');
     seal.ext.register(ext);
   }
 
@@ -511,7 +511,7 @@ ${Object.keys(tool.info.function.parameters.properties).map(key => {
             }
 
             if (ToolManager.cmdArgs == null) {
-              seal.replyToSender(ctx, msg, `暂时无法调用函数，请先使用任意海豹指令`);
+              seal.replyToSender(ctx, msg, `暂时无法调用函数，请先使用 .r 指令`);
               return ret;
             }
 
@@ -1153,6 +1153,7 @@ ${Object.keys(tool.info.function.parameters.properties).map(key => {
           await ai.context.addMessage(ctx, message, images, 'user', transformMsgId(msg.rawId));
 
           logger.info('非指令触发回复');
+          ai.tool.toolCallCount = 0;
           await ai.chat(ctx, msg);
           AIManager.saveAI(id);
           return;
@@ -1185,6 +1186,7 @@ ${Object.keys(tool.info.function.parameters.properties).map(key => {
           triggerConditionMap[id].splice(i, 1);
 
           logger.info('AI设定触发条件触发回复');
+          ai.tool.toolCallCount = 0;
           await ai.chat(ctx, msg);
           AIManager.saveAI(id);
           return;
@@ -1212,6 +1214,7 @@ ${Object.keys(tool.info.function.parameters.properties).map(key => {
 
         if (ai.context.counter >= pr.counter) {
           logger.info('计数器触发回复');
+          ai.tool.toolCallCount = 0;
           ai.context.counter = 0;
 
           await ai.chat(ctx, msg);
@@ -1225,7 +1228,7 @@ ${Object.keys(tool.info.function.parameters.properties).map(key => {
 
         if (ran <= pr.prob) {
           logger.info('概率触发回复');
-
+          ai.tool.toolCallCount = 0;
           await ai.chat(ctx, msg);
           AIManager.saveAI(id);
           return;
@@ -1235,7 +1238,7 @@ ${Object.keys(tool.info.function.parameters.properties).map(key => {
       if (pr.timer > -1) {
         ai.context.timer = setTimeout(async () => {
           logger.info('计时器触发回复');
-
+          ai.tool.toolCallCount = 0;
           ai.context.timer = null;
           await ai.chat(ctx, msg);
           AIManager.saveAI(id);
@@ -1361,6 +1364,7 @@ ${Object.keys(tool.info.function.parameters.properties).map(key => {
       await ai.context.addSystemUserMessage("定时器触发提示", s, []);
 
       logger.info('定时任务触发回复');
+      ai.tool.toolCallCount = 0;
       await ai.chat(ctx, msg);
       AIManager.saveAI(id);
 
