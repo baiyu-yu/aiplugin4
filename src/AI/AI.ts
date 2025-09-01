@@ -1,12 +1,12 @@
-import { ImageManager } from "./image";
+import { Image, ImageManager } from "./image";
 import { ConfigManager } from "../config/config";
-import { replyToSender } from "../utils/utils";
-import { endStream, pollStream, sendChatRequest, startStream } from "./service";
+import { replyToSender, transformMsgId } from "../utils/utils";
+import { endStream, pollStream, sendChatRequest, startStream } from "../service";
 import { Context } from "./context";
 import { Memory } from "./memory";
 import { handleMessages, parseBody } from "../utils/utils_message";
 import { ToolManager } from "../tool/tool";
-import { logger } from "./logger";
+import { logger } from "../logger";
 import { checkRepeat, handleReply } from "../utils/utils_string";
 import { checkContextUpdate } from "../utils/utils_update";
 
@@ -28,13 +28,13 @@ export class AI {
     privilege: Privilege;
 
     // 下面是临时变量，用于处理消息
-    stream: {
+    stream: { // 用于流式输出相关
         id: string,
         reply: string,
         toolCallStatus: boolean
     }
 
-    bucket: {
+    bucket: { // 触发次数令牌桶
         count: number,
         lastTime: number
     }
@@ -85,7 +85,24 @@ export class AI {
         this.tool.toolCallCount = 0;
     }
 
-    async chat(ctx: seal.MsgContext, msg: seal.Message): Promise<void> {
+    async handleReceipt(ctx: seal.MsgContext, msg: seal.Message, ai: AI, message: string, CQTypes: string[]) {
+        // 图片偷取，以及图片转文字
+        let images: Image[] = [];
+        if (CQTypes.includes('image')) {
+            const result = await ImageManager.handleImageMessage(ctx, message);
+            message = result.message;
+            images = result.images;
+            if (ai.imageManager.stealStatus) {
+                ai.imageManager.updateStolenImages(images);
+            }
+        }
+
+        await ai.context.addMessage(ctx, msg, ai, message, images, 'user', transformMsgId(msg.rawId));
+    }
+
+    async chat(ctx: seal.MsgContext, msg: seal.Message, reason: string = ''): Promise<void> {
+        logger.info('触发回复:', reason || '未知原因');
+
         const { bucketLimit, fillInterval } = ConfigManager.received;
         // 补充并检查触发次数
         if (Date.now() - this.bucket.lastTime > fillInterval * 1000) {
@@ -113,12 +130,9 @@ export class AI {
         }
         if (stream) {
             await this.chatStream(ctx, msg);
+            AIManager.saveAI(this.id);
             return;
         }
-
-        const timeout = setTimeout(() => {
-            logger.warning(this.id, `处理消息超时`);
-        }, 60 * 1000);
 
         let result = {
             contextArray: [],
@@ -167,7 +181,7 @@ export class AI {
             }
         }
 
-        clearTimeout(timeout);
+        AIManager.saveAI(this.id);
     }
 
     async chatStream(ctx: seal.MsgContext, msg: seal.Message): Promise<void> {
@@ -177,6 +191,9 @@ export class AI {
 
         const messages = handleMessages(ctx, this);
         const id = await startStream(messages);
+        if (id === '') {
+            return;
+        }
 
         this.stream.id = id;
         let status = 'processing';

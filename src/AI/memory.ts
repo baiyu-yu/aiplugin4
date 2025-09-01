@@ -3,8 +3,8 @@ import { ConfigManager } from "../config/config";
 import { AI, AIManager } from "./AI";
 import { Context, Message } from "./context";
 import { generateId } from "../utils/utils";
-import { logger } from "./logger";
-import { fetchData } from "./service";
+import { logger } from "../logger";
+import { fetchData } from "../service";
 import { parseBody } from "../utils/utils_message";
 import { ToolManager } from "../tool/tool";
 
@@ -30,17 +30,19 @@ export interface MemoryInfo {
 export class Memory {
     persona: string;
     memoryMap: { [key: string]: MemoryInfo };
-    shortMemory: string[];
+    useShortMemory: boolean;
+    shortMemoryList: string[];
 
     constructor() {
         this.persona = '无';
         this.memoryMap = {};
-        this.shortMemory = [];
+        this.useShortMemory = false;
+        this.shortMemoryList = [];
     }
 
     static reviver(value: any): Memory {
         const memory = new Memory();
-        const validKeys = ['persona', 'memoryMap', 'shortMemory'];
+        const validKeys = ['persona', 'memoryMap', 'useShortMemory', 'shortMemory'];
 
         for (const k in value) {
             if (validKeys.includes(k)) {
@@ -76,8 +78,8 @@ export class Memory {
             time: new Date().toLocaleString(),
             createTime: Math.floor(Date.now() / 1000),
             lastMentionTime: Math.floor(Date.now() / 1000),
-            keywords: kws,
-            content: content,
+            keywords: kws || [],
+            content: content || '',
             weight: 0
         };
 
@@ -108,7 +110,7 @@ export class Memory {
     }
 
     clearShortMemory() {
-        this.shortMemory = [];
+        this.shortMemoryList = [];
     }
 
     limitMemory() {
@@ -139,15 +141,26 @@ export class Memory {
 
     limitShortMemory() {
         const { shortMemoryLimit } = ConfigManager.memory;
-        if (this.shortMemory.length > shortMemoryLimit) {
-            this.shortMemory.splice(0, this.shortMemory.length - shortMemoryLimit);
+        if (this.shortMemoryList.length > shortMemoryLimit) {
+            this.shortMemoryList.splice(0, this.shortMemoryList.length - shortMemoryLimit);
         }
     }
 
     async updateShortMemory(ctx: seal.MsgContext, msg: seal.Message, ai: AI, sumMessages: Message[]) {
-        const { url, apiKey } = ConfigManager.request;
+        if (!this.useShortMemory) {
+            return;
+        }
+
+        const { url: chatUrl, apiKey: chatApiKey } = ConfigManager.request;
         const { roleSettingTemplate, isPrefix, showNumber, showMsgId } = ConfigManager.message;
-        const { memoryBodyTemplate, memoryPromptTemplate } = ConfigManager.memory;
+        const { memoryUrl, memoryApiKey, memoryBodyTemplate, memoryPromptTemplate } = ConfigManager.memory;
+
+        let url = chatUrl;
+        let apiKey = chatApiKey;
+        if (memoryUrl.trim()) {
+            url = memoryUrl;
+            apiKey = memoryApiKey;
+        }
 
         try {
             let [roleSettingIndex, _] = seal.vars.intGet(ctx, "$gSYSPROMPT");
@@ -217,7 +230,7 @@ export class Memory {
                 };
 
 
-                this.shortMemory.push(memoryData.content);
+                this.shortMemoryList.push(memoryData.content);
                 this.limitShortMemory();
 
                 memoryData.memories.forEach(m => {

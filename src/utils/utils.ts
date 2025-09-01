@@ -1,5 +1,5 @@
 import { AI } from "../AI/AI";
-import { logger } from "../AI/logger";
+import { logger } from "../logger";
 import { ConfigManager } from "../config/config";
 import { transformTextToArray } from "./utils_string";
 
@@ -80,4 +80,13 @@ export async function replyToSender(ctx: seal.MsgContext, msg: seal.Message, ai:
         seal.replyToSender(ctx, msg, s);
         return '';
     }
+}
+
+export function withTimeout<T>(asyncFunc: () => Promise<T>, timeoutMs: number): Promise<T> {
+    return Promise.race([
+        asyncFunc(),
+        new Promise<never>((_, reject) => {
+            setTimeout(() => reject(new Error(`操作超时 (${timeoutMs}ms)`)), timeoutMs);
+        })
+    ]);
 }
