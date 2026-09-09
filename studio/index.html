@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AIPLUGIN4 BUILD STUDIO // 模块化在线定制与扩展商店</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+</head>
+<body class="theme-dark">
+  <!-- 顶部系统栏 -->
+  <header class="studio-header">
+    <div class="brand">
+      <div class="brand-badge">AIP4-STUDIO</div>
+      <div class="brand-title">
+        <span class="main-name">AIPLUGIN4</span>
+        <span class="sub-name">BUILD STUDIO &amp; EXTENSION HUB</span>
+      </div>
+    </div>
+    
+    <div class="header-actions">
+      <div class="preset-selector-wrap">
+        <span class="ctrl-label">PRESET:</span>
+        <button type="button" class="btn-preset active" data-preset="minimal">MINIMAL</button>
+        <button type="button" class="btn-preset" data-preset="trpg">TRPG BOT</button>
+        <button type="button" class="btn-preset" data-preset="ob11">OB11 SUITE</button>
+        <button type="button" class="btn-preset" data-preset="full">FULL STACK</button>
+      </div>
+
+      <div class="divider-v"></div>
+
+      <button type="button" id="btnExportConfig" class="btn-ctrl">
+        <svg class="icon" viewBox="0 0 24 24" width="14" height="14"><path fill="none" stroke="currentColor" stroke-width="2" d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+        EXPORT CFG
+      </button>
+      <button type="button" id="btnImportConfig" class="btn-ctrl">
+        <svg class="icon" viewBox="0 0 24 24" width="14" height="14"><path fill="none" stroke="currentColor" stroke-width="2" d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+        IMPORT CFG
+      </button>
+      <input type="file" id="cfgFileInput" accept=".json" style="display:none;">
+    </div>
+  </header>
+
+  <!-- 主体工作区 (三栏布局) -->
+  <main class="studio-workspace">
+    <!-- 栏目 1: 官方功能模块 (Features) -->
+    <section class="panel panel-features">
+      <div class="panel-header">
+        <div class="panel-title-wrap">
+          <span class="panel-code">01</span>
+          <span class="panel-title">SYSTEM FEATURES</span>
+        </div>
+        <span class="panel-desc">按需启用高级子系统</span>
+      </div>
+
+      <div class="panel-content" id="featuresList">
+        <!-- 动态渲染功能模块勾选列表 -->
+      </div>
+    </section>
+
+    <!-- 栏目 2: 官方内置工具 (Tools) -->
+    <section class="panel panel-tools">
+      <div class="panel-header">
+        <div class="panel-title-wrap">
+          <span class="panel-code">02</span>
+          <span class="panel-title">OFFICIAL TOOLKIT</span>
+        </div>
+        <div class="panel-tools-actions">
+          <button type="button" class="btn-mini" id="btnSelectAllTools">[ALL]</button>
+          <button type="button" class="btn-mini" id="btnDeselectAllTools">[NONE]</button>
+        </div>
+      </div>
+
+      <div class="panel-filter-bar">
+        <input type="text" id="toolSearchInput" placeholder="FILTER TOOLS (ID / NAME / TAG)..." class="input-flat">
+      </div>
+
+      <div class="panel-content" id="toolsList">
+        <!-- 动态渲染工具勾选列表 -->
+      </div>
+    </section>
+
+    <!-- 栏目 3: 民间扩展工作区 (Community Extensions Hub) -->
+    <section class="panel panel-community">
+      <div class="panel-header">
+        <div class="panel-title-wrap">
+          <span class="panel-code">03</span>
+          <span class="panel-title">COMMUNITY EXTENSIONS</span>
+        </div>
+        <span class="panel-desc">上传自定义 Tool / Skill / 设定 / 知识库</span>
+      </div>
+
+      <!-- 拖拽上传区域 -->
+      <div class="drop-zone" id="dropZone">
+        <svg class="icon-drop" viewBox="0 0 24 24" width="24" height="24"><path fill="none" stroke="currentColor" stroke-width="2" d="M12 3v12M8 7l4-4 4 4M20 17v2a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-2"/></svg>
+        <div class="drop-title">DROP EXTENSION PACKAGE HERE</div>
+        <div class="drop-subtitle">SUPPORT .AIPK / .ZIP / .TS / .JS / .MD / .JSON</div>
+        <button type="button" class="btn-ctrl btn-upload" id="btnBrowseFile">BROWSE LOCAL FILES</button>
+        <input type="file" id="extFileInput" accept=".aipk,.zip,.ts,.js,.md,.json" multiple style="display:none;">
+      </div>
+
+      <!-- 社区扩展列表 -->
+      <div class="community-list-header">
+        <span>LOADED PACKAGES (<span id="communityCount">0</span>)</span>
+        <a href="../docs/community_extension_spec.md" target="_blank" class="spec-link">SPECIFICATION GUIDE &gt;</a>
+      </div>
+
+      <div class="panel-content" id="communityList">
+        <!-- 动态渲染民间上传的组件卡片 -->
+      </div>
+    </section>
+  </main>
+
+  <!-- 底部构建监控面板 (Build Bar) -->
+  <footer class="studio-footer">
+    <div class="status-group">
+      <div class="stat-item">
+        <span class="stat-label">SELECTED TOOLS:</span>
+        <span class="stat-val" id="statToolCount">0</span>
+      </div>
+      <div class="stat-divider">/</div>
+      <div class="stat-item">
+        <span class="stat-label">COMMUNITY ITEMS:</span>
+        <span class="stat-val" id="statCommCount">0</span>
+      </div>
+      <div class="stat-divider">/</div>
+      <div class="stat-item">
+        <span class="stat-label">ESTIMATED SIZE:</span>
+        <span class="stat-val highlight" id="statEstimatedSize">0 KB</span>
+      </div>
+      <div class="stat-divider">/</div>
+      <div class="stat-item">
+        <span class="stat-label">COMPILATION MODE:</span>
+        <span class="stat-val text-mono">CLIENT-SIDE BUNDLER</span>
+      </div>
+    </div>
+
+    <div class="footer-actions">
+      <button type="button" id="btnBuildPlugin" class="btn-build">
+        <svg class="icon" viewBox="0 0 24 24" width="16" height="16"><path fill="none" stroke="currentColor" stroke-width="2" d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+        BUILD &amp; DOWNLOAD .JS
+      </button>
+    </div>
+  </footer>
+
+  <!-- 详情与审查查看模态弹窗 (Modal) -->
+  <div class="modal-overlay" id="detailModal" style="display:none;">
+    <div class="modal-box">
+      <div class="modal-header">
+        <div class="modal-title-wrap">
+          <span class="modal-tag">PACKAGE INSPECTOR</span>
+          <span class="modal-title" id="modalPkgName">扩展详情</span>
+        </div>
+        <button type="button" class="btn-close" id="btnModalClose">&times;</button>
+      </div>
+      <div class="modal-body" id="modalBody">
+        <!-- 动态插入 README 渲染或 AI 审查报告 -->
+      </div>
+      <div class="modal-footer" id="modalFooter">
+        <!-- 管理员/审查操作按钮 -->
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

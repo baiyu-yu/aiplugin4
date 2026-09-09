@@ -18,3 +18,4 @@ skills/**/.env
 __pycache__/
 *.pyc
 *.pyo
+browser-mcp/

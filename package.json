@@ -16,7 +16,8 @@
     "package:check": "npm run build && node scripts/prepare-sealpack.js && sealpack validate sealpack && sealpack size sealpack",
     "pack:sealpack": "node scripts/prepare-sealpack.js && sealpack pack sealpack --out dist/aiplugin4.sealpack",
     "pack:release": "node scripts/build-release.js",
-    "test:unit": "node scripts/test-unit.cjs"
+    "test:unit": "node scripts/test-unit.cjs",
+    "build:custom": "node tools/custom-build.js"
   },
   "engines": {
     "node": ">=10"
